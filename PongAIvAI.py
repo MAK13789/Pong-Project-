@@ -138,7 +138,6 @@ class Ball:
         self.speed = (factor*self.speed[0], factor*self.speed[1])
 
 
-
     def move(self, paddles, table_size, move_factor):
         moved = 0
         walls_Rects = [Rect((-100, -100), (table_size[0]+200, 100)),
