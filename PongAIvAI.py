@@ -25,9 +25,6 @@ from pygame.locals import *
 import math
 
 
-
-
-
 white = [255, 255, 255]
 black = [0, 0, 0]
 clock = pygame.time.Clock()
@@ -379,9 +376,9 @@ def init_game():
     
     
     
-    import chaser_ai
+    import best_ai_v1
     import pong_new_AI
-    paddles[0].move_getter = chaser_ai.pong_ai
+    paddles[0].move_getter = best_ai_v1.best_ai_v1
     paddles[1].move_getter = pong_new_AI.new_ai  #directions_from_input #chaser_ai.pong_ai
     
     game_loop(screen, paddles, ball, table_size, clock_rate, turn_wait_rate, score_to_win, 1)

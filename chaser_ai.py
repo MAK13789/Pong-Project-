@@ -19,7 +19,6 @@ def pong_ai(paddle_frect, other_paddle_frect, ball_frect, table_size):
                     c += 1
                 theta = paddle.get_angle(self.frect.pos[1]+.5*self.frect.size[1])
 
-
                 v = self.speed
 
                 v = [math.cos(theta)*v[0]-math.sin(theta)*v[1],
