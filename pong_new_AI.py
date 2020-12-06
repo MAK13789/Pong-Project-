@@ -30,20 +30,15 @@
 
 '''
 TO DO:
-- if you break from the while loop because of time, don't update the y-value
-
-- make it work when the board switches sides
-
-- make it so that the paddle doesn't go all the way to the edge of the table (because I think after a certain point it won't make a difference bc of the ball's width)
-
-- try it where it always hits the ball near the corner of the paddle, and then after see what happens if you try and hit it with the side of the paddle (make the x-coordinate of intersection further back)
-
 - loop through values between -0.5 and 0.5 at some increment (idk if it should be constant or non-constant) and find the value where when the paddle is diplaced that fraction of its length, it gives the max distance from the opponent's paddle
         - exit the loop before timed out and use the one with the max distance
 
-- not sure if it's better for the paddle to move to the middle after a move or to follow the other paddle after a move, or maybe follow some weighted average
-        - my guess is that for chaser_ai it's better to follow, but for opponents it'll be better to go to the middle
+- if the opponent's paddle stops moving, calculate everything early, based on what would happen if the paddle stayed still
+        - also maybe do this anyways if the other paddle is moving
 
+- check that the thing where it doesn't go all the way to the edge isn't risky
+
+- try it where it always hits the ball near the corner of the paddle, and then after see what happens if you try and hit it with the side of the paddle (make the x-coordinate of intersection further back)
 
 In general:
 - hunt bugs
@@ -54,6 +49,8 @@ In general:
 
 import time
 import PongAIvAI
+import math
+
 first_run = True
 prev_pos = [0, 0]
 sign2 = 0
@@ -71,7 +68,7 @@ def new_ai(paddle_frect, other_paddle_frect, ball_frect, table_size):
 
     # on the first frame, there is no previous position of the ball, so it is set to the middle
     if first_run:
-        prev_pos = [table_size[1]/2, table_size[1]/2]
+        prev_pos = [table_size[0]/2, table_size[1]/2]
         first_run = False
 
     start_time = time.time()
@@ -115,9 +112,9 @@ def new_ai(paddle_frect, other_paddle_frect, ball_frect, table_size):
             if ((end_time - start_time) * 1000) > 0.05:
                 broken = True
                 break
-            
+
             # check if the point where it intersects a wall is to the right of the paddle, and exit the loop
-            if ((your_side == "right" and final_pos[0] >= paddle_frect.pos[0]) or (your_side == "left" and final_pos[0] <= paddle_frect.pos[0])):
+            if ((your_side == "right" and final_pos[0] >= paddle_frect.pos[0]) or (your_side == "left" and final_pos[0] <= paddle_frect.pos[0] + paddle_frect.size[0])):
                 break
             #print(final_pos[0], "-----wall------", counter) # print the predicted position for when it intersects with a wall
             predicted_prev_pos = final_pos
@@ -132,7 +129,6 @@ def new_ai(paddle_frect, other_paddle_frect, ball_frect, table_size):
             
         if (not broken):
             y = predicted_prev_pos[1] + t*prev_vel[1]
-    
     prev_pos = pos
     sign2 = sign
     
@@ -147,7 +143,7 @@ def new_ai(paddle_frect, other_paddle_frect, ball_frect, table_size):
     # if the ball goes out of bounds
     # score if it passes the entire width of the paddle, ----      pos[0] >= paddle_frect.pos[0] + ball_frect.size[0] or pos[0] <= other_paddle_frect.pos[0]
     if (your_side == "right"):
-        if pos[0]+ball_frect.size[0]/2 >= paddle_frect.pos[0] + 5 or pos[0]-ball_frect.size[0]/2 <= other_paddle_frect.pos[0] + other_paddle_frect.size[0] - 5:
+        if pos[0]+ball_frect.size[0]/2 >= paddle_frect.pos[0] + other_paddle_frect.size[0] + 5 or pos[0]-ball_frect.size[0]/2 <= other_paddle_frect.pos[0] + other_paddle_frect.size[0] - 5:
             y = table_size[1]/2
             prev_pos = [table_size[0]/2, table_size[1]/2]
     else:
@@ -156,8 +152,16 @@ def new_ai(paddle_frect, other_paddle_frect, ball_frect, table_size):
             prev_pos = [table_size[0]/2, table_size[1]/2]
     
     
+    if paddle_frect.pos[1] <= ball_frect.size[1] - 3: # top of paddle above top boundary # changed to 3 from 1
+        return "down"
 
-    if paddle_frect.pos[1] + paddle_frect.size[1]/2 < y:
-       return "down"
+    if paddle_frect.pos[1] + paddle_frect.size[1] >= table_size[1] - ball_frect.size[1] + 3:
+        return "up"
+    
+# at the start of the run, y got updated when the ball was moving away from the paddle
+# also it went to the correct position near the edge but moved away right before the ball came  --- check more so that this doesn't happen again - maybe add more padding
+
+    if paddle_frect.pos[1] + paddle_frect.size[1]/2 < y: # want to go up
+        return "down"
     else:
-       return "up"
+        return "up"
